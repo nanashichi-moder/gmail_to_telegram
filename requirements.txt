@@ -1,0 +1,22 @@
+# web / api
+Flask>=2.2
+
+# requests для HTTP-запросов (OpenWeather и др.)
+requests>=2.31
+
+# dotenv для чтения .env
+python-dotenv>=1.0
+
+# Google API (Gmail)
+google-api-python-client>=2.84
+google-auth>=2.18
+google-auth-oauthlib>=1.2
+
+# Telegram bot (современная библиотека)
+python-telegram-bot>=20.3
+
+# (опционально) если хочешь собирать exe или работать с ресурсами
+# pyinstaller>=5.11
+
+# dev / полезные утилиты (необязательно, можно убрать)
+# pip-tools>=6.9
