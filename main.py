@@ -1,6 +1,7 @@
 import logging
 import config
 import asyncio
+from emoji import emojize
 
 from logging_config import setup_logging
 
@@ -19,24 +20,27 @@ async def main():
     while True:
         # Main programm function. It is getting cache and email. / Главная функция. Берёт весь кеш и само сообщение, также отправителя
         cache = load_cache()
-        email, attachments_paths = gmail_client.get_last_email()
-        print("Got email", email, attachments_paths)
+        email = gmail_client.get_last_email_formatted_json()
+        print("Got email", email)
         if email:
-            from_header = gmail_client.get_header(email["payload"]["headers"], "From")
-            # print(email)
-            # for k in email["payload"]:
-            #     print(k, email["payload"][k], '\n\n')
-            # print("PAYLOAD:", email["payload"]["headers"])
-            # print("SUBJECT:", get_header(email["payload"]["headers"], "Subject"))
-            # if email and email["id"] != cache["last_email_id"]: # if email was not already sent
-            #     logger.info("New message found -> sending to Telegram")
-            #     await send_to_channel(from_header) # sending the sender
-            #     await send_to_channel(email["snippet"]) # sending the message (different message)
-            #     cache["last_email_id"] = email["id"] 
-            #     save_cache(cache) # saving mail ID
-            # else:
+            # {"sender": sender, "subject": subject, "body": body, "attachments": attachments_paths}
+            print(email)
+            if email and email["id"] != cache["last_email_id"]: # if email was not already sent
+                logger.info("New message found -> sending to Telegram")
+                text = f"""
+:label: <b>{email["subject"]}</b>
+
+<i>{email["sender"].replace('<', "(").replace('>', ")")}</i>
+
+<blockquote>
+{email["body"]}
+</blockquote>
+                """
+                await send_to_channel(text=text, attachments=email["attachments"])
+                cache["last_email_id"] = email["id"] 
+                save_cache(cache) # saving mail ID
         logger.warning("No new email found")
-        await asyncio.sleep(5)
+        await asyncio.sleep(15*60)
 
 if __name__ == "__main__": #Main function activation
 

@@ -3,6 +3,8 @@ import logging
 import base64
 import traceback
 
+from bs4 import BeautifulSoup
+
 from config import FILES_DIR, logger
 
 from google.oauth2.credentials import Credentials
@@ -97,11 +99,12 @@ class GmailClient:
             logger.error(f'An error occurred: {error}')
         return []
 
-    def get_last_email(self):
+    def get_last_email(self, load_attachments=True):    
         """
         Запрос последнего письма
         returns: last_message: dict - письмо, paths_to_file: list - список путей к файлам
         """
+        # TODO: return json, not tuple with message and paths
         logger.info("Trying to get last message")
 
         try:
@@ -125,12 +128,14 @@ class GmailClient:
                 id=message_id,
                 format="full"
             ).execute() # no last message
-
-            paths_to_file = self.get_attachments("me", message_id)
-            print(f"Got attachment: {paths_to_file}")
             
+            attachments_paths = []
+            if load_attachments:
+                attachments_paths = self.get_attachments("me", message_id)
+                print(f"Got attachment: {attachments_paths}")
+                
             logger.info("Successful message returning")
-            return last_message, paths_to_file
+            return last_message, attachments_paths
         except HttpError:
             logger.error("Message was NOT returned correctly: HTTP error")
             return None, []
@@ -138,13 +143,57 @@ class GmailClient:
             logger.error(f"Message was NOT returned correctly: {e} \n {traceback.format_exc()}")
             return None, []
     
-    def get_header(self, headers, name): 
+    def get_email_body(self, msg_payload):
+        """Recursively extracts the plain text body from a message payload."""
+        if 'parts' in msg_payload:
+            for part in msg_payload['parts']:
+                if part['mimeType'] == 'text/plain':
+                    data = part['body']['data']
+                    return base64.urlsafe_b64decode(data).decode('utf-8')
+                elif part['mimeType'] == 'text/html':
+                    # Can also extract HTML and use BeautifulSoup to get text
+                    data = part['body']['data']
+                    html_body = base64.urlsafe_b64decode(data).decode('utf-8')
+                    return BeautifulSoup(html_body, 'html.parser').get_text()
+                elif part['mimeType'].startswith('multipart/'):
+                    # Recurse into nested parts
+                    result = self.get_email_body(part)
+                    if result:
+                        return result
+        else:
+            # Fallback for simple messages or 'snippet' if full body not present
+            if msg_payload.get('body', {}).get('data'):
+                data = msg_payload['body']['data']
+                return base64.urlsafe_b64decode(data).decode('utf-8')
+        return ""
+        
+    def get_last_email_formatted_json(self, 
+                                      load_attachments=True, 
+                                      return_additional_info=False):
+        """Функция возвращает текст письма"""
+        logger.info("Trying to get message text")
+        msg, attachments_paths = self.get_last_email(load_attachments=load_attachments)
+        if not msg:
+            logger.error("Message was NOT returned correctly")
+            return None
+        logger.info("Successfully got message text")
+        subject = self.get_header(msg["payload"]["headers"], "Subject")
+        sender = self.get_header(msg["payload"]["headers"], "From")
+        body = self.get_email_body(msg["payload"])
+        # print(f"Got message: {subject} \n {sender} \n {body}")
+        result = {"id": msg["id"], "sender": sender, "subject": subject, 
+                  "body": body, "attachments": attachments_paths}
+        if return_additional_info:
+            result["full_message"] = msg
+        return result
+        
+    def get_header(self, msg_headers, name): 
         """Эта функция возвращает отправителя"""
-        for h in headers:
+        for h in msg_headers:
             if h["name"].lower() == name.lower():
-                logger.info("Successfully got message sender")
+                logger.info(f"Successfully got message header {name}")
                 return h["value"]
-        logger.error("Message sender was NOT returned. Something went wrong")
+        logger.error("Message header NOT FOUND. Something went wrong")
         return None
     
 

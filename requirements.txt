@@ -15,6 +15,7 @@ google-auth-oauthlib>=1.2
 # Telegram bot (современная библиотека)
 python-telegram-bot>=20.3
 
+emoji>=2.15.0
 # (опционально) если хочешь собирать exe или работать с ресурсами
 # pyinstaller>=5.11
 
