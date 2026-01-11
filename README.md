@@ -1,4 +1,16 @@
-Gmail to Telegram (ENG)
+### Simple setup ###
+
+1) Create .env:
+- TELEGRAM_BOT_TOKEN=...
+- TELEGRAM_CHANNEL_ID=...
+
+2) Put credentials.json in project root (Google OAuth client secrets)
+
+3) Install dependencies:
+pip install -r requirements.txt
+
+4) Run:
+python main.py
 
 Gmail to Telegram (ENG)
 ===========================
@@ -48,6 +60,7 @@ You can see it in logs
 
 
 Gmail to Telegram (RUS)
+Быстро начать работать - прочитайте в начале Simple Setup
 ===========================
 Эта программа сделана для соеденения почты Google и Telegram
 Работает на стандартных библиотеках Google и Telegram:
