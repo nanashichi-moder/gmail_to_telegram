@@ -27,6 +27,10 @@ async def main():
             print(email)
             if email and email["id"] != cache["last_email_id"]: # if email was not already sent
                 logger.info("New message found -> sending to Telegram")
+                msg_body = email["body"]
+                if len(msg_body) > 1000:
+                    msg_body = msg_body[:995] + "..."
+                
                 text = f"""
 :label: <b>{email["subject"].replace('<', "(").replace('>', ")")}</b>
 
