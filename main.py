@@ -27,9 +27,9 @@ async def main():
             print(email)
             if email and email["id"] != cache["last_email_id"]: # if email was not already sent
                 logger.info("New message found -> sending to Telegram")
-                msg_body = email["body"]
-                if len(msg_body) > 500:
-                    msg_body = msg_body[:500] + f"... (и еще {len(msg_body) - 500} символов)"
+                msg_body = email["body"].replace('<', "(").replace('>', ")")
+                if len(msg_body) > 800:
+                    msg_body = msg_body[:800] + f"... (и еще {len(msg_body) - 800} символов)"
                 
                 text = f"""
 :label: <b>{email["subject"].replace('<', "(").replace('>', ")")}</b>
@@ -37,7 +37,7 @@ async def main():
 <i>{email["sender"].replace('<', "(").replace('>', ")")}</i>
 
 <blockquote>
-{email["body"].replace('<', "(").replace('>', ")")}
+{msg_body}
 </blockquote>
                 """
                 await send_to_channel(text=text, attachments=email["attachments"])
