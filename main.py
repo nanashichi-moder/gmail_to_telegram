@@ -28,12 +28,12 @@ async def main():
             if email and email["id"] != cache["last_email_id"]: # if email was not already sent
                 logger.info("New message found -> sending to Telegram")
                 text = f"""
-:label: <b>{email["subject"]}</b>
+:label: <b>{email["subject"].replace('<', "(").replace('>', ")")}</b>
 
 <i>{email["sender"].replace('<', "(").replace('>', ")")}</i>
 
 <blockquote>
-{email["body"]}
+{email["body"].replace('<', "(").replace('>', ")")}
 </blockquote>
                 """
                 await send_to_channel(text=text, attachments=email["attachments"])
@@ -43,5 +43,4 @@ async def main():
         await asyncio.sleep(15*60)
 
 if __name__ == "__main__": #Main function activation
-
     asyncio.run(main())
