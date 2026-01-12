@@ -29,7 +29,7 @@ async def main():
                 logger.info("New message found -> sending to Telegram")
                 msg_body = email["body"]
                 if len(msg_body) > 1000:
-                    msg_body = msg_body[:995] + "..."
+                    msg_body = msg_body[:600] + f"... (и еще {len(msg_body) - 600} символов)"
                 
                 text = f"""
 :label: <b>{email["subject"].replace('<', "(").replace('>', ")")}</b>
